@@ -1,11 +1,8 @@
 import java.io.File;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Scanner;
-
-//import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
-//import java.util.ArrayList;
-//import java.util.List;
 
 public class Implication 
 {
@@ -76,6 +73,22 @@ public class Implication
         {
         	 System.out.println("Date de fin du sommet "+ i + " : " + array[i]);
         }
+        
+        List<List<Integer>> TESTarray =  PutArray(Gt,array);
+        
+
+        for(int i = 0; i< TESTarray.size();i++)
+        {
+        	System.out.println(TESTarray.get(i));
+        }
+        
+        System.out.println("Il y a  "+ TESTarray.size() + " composantes fortement connexes ");
+        boolean l = TestopposedLiteral(TESTarray,array.length);
+        
+        if(!l)
+        	System.out.println("Le 2sat est satisfaisable");
+        else
+        	System.out.println("Le 2sat n'est pas satisfaisable");
         
     }
     
@@ -158,37 +171,79 @@ public class Implication
     	return dateFin;
     }
 
-    public static Graph<String>  PutArray(Graph<String> Gt,int [] array)
+    public static List<List<Integer>>  PutArray(Graph<String> Gt,int [] array)
     {
     	int Bignomber;
+    	List<List<Integer>> returnList = new ArrayList<>();
 
     	int o = 0;
-    	Graph<String> Gconnexe = new Graph<String>(0);
+    	int indexList=0;
     	
-    	for(int i = 0; i < array.length;i++)
+    	while(!TestArray(array)) 
     	{
+    		
+    		returnList.add(new ArrayList<>());
     		Bignomber = 0;
     		for(int p = 0; p < array.length; p++)
     		{
     			if(Bignomber < array[p])
     			{
+    				
     				o = p;
     				Bignomber = array[p];
     			}
     		}
-    		
     		array[o] = 0;
     		
-    		if(Gt.getIncidency(o).size() > 0)
+    		
+    		returnList.get(indexList).add(o);
+    		System.out.println();
+    		for(int i = 0; i < Gt.getIncidency(o).size();i++)
     		{
-    			for(int l = 0; l < Gt.getIncidency(o).size();l++)
+    			System.out.println(o);
+    			System.out.println(Gt.getIncidency(o).size());
+    			if(array[Gt.getDestinationEdge(o,i)] != 0) 
     			{
-    				///Gt.getDestinationEdge(o, l)
+    				returnList.get(indexList).add(Gt.getDestinationEdge(o,i));
+    				array[Gt.getDestinationEdge(o,i)] = 0;
+    				o = Gt.getDestinationEdge(o,i);
+    				i=0;
     			}
     		}
+    		System.out.println("lel");
+    		indexList++;
     		
     	}
     	
-    	return Gconnexe;
+    	return returnList;
+    }
+    
+    public static boolean  TestArray(int [] array)
+    {
+    	boolean test = true;
+    	for(int i = 0; i < array.length;i++)
+    	{
+    		if(array[i] != 0)
+    		{
+    			test = false;
+    		}
+    	}
+    	return test;
+    }
+
+    public static boolean  TestopposedLiteral(List<List<Integer>> array,int size)
+    {
+    	boolean test = false;
+    	for(int i = 0; i < array.size();i++)
+    	{
+    		for(int p = 0; p < array.get(i).size();p++)
+    		{
+    			System.out.println(array.get(i).get(p)+" doit pas trouver "+((size-1)-array.get(i).get(p)));  
+    			test = array.get(i).contains((size-1)-array.get(i).get(p));
+    			System.out.println(array.get(i).get(p) + " | " + test);  
+    		}
+    	}
+    	return test;
     }
 }
+
