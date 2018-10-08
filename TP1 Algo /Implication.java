@@ -3,7 +3,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
+//import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 //import java.util.ArrayList;
 //import java.util.List;
 
@@ -15,6 +15,7 @@ public class Implication
         System.out.println("--- Debut du main ---");
         Scanner saisie;
         Graph<String> G = new Graph<String>(0);
+        
         Graph<String> Gt = new Graph<String>(0);
         
         try //Passer dans la fonction lecture fichier
@@ -37,8 +38,8 @@ public class Implication
             saisie.close();
             System.out.println("--- Fermeture du fichier ---");
             
-            G = array[0];
-            Gt = array[1];
+            G = array.get(0);
+            Gt = array.get(1);
             
         }
         catch(Exception ex) 
@@ -49,12 +50,38 @@ public class Implication
         
         System.out.println("G \n" + G.toString());
         System.out.println("Gt \n"+ Gt.toString());
-       
+        //Mettre les variables à 0.
+        int fin = 0;
+        int [] array = new int [G.order()];
+        
+        for(int i = 0;i<array.length;i++)
+        {
+        	
+        	array[i] = 0;
+        }
+        
+        //Mettre les dates de fin sur chaque sommet
+        //Fonction à faire
+        for(int i = 0; i < G.order();i++)
+    	{
+        	if(array[i] == 0) 
+        	{
+        		fin = pathDepthFirstSearch(G,i,array,fin);
+        	}
+    	}
+        
+        
+        
+        for(int i = 0; i<array.length;i++)
+        {
+        	 System.out.println("Date de fin du sommet "+ i + " : " + array[i]);
+        }
+        
     }
     
-    public static Graph<String>[] readFile(Scanner file,Graph<String> _G,Graph<String> _Gt) 
+    public static List<Graph<String>> readFile(Scanner file,Graph<String> _G,Graph<String> _Gt) 
     {
-    	Graph<String> [] returnArray = new Graph<String> [2];
+    	List<Graph<String>> returnArray = Arrays.asList(_G,_Gt);
     	
     	System.out.println("--- Lecture du fichier ---");
     	
@@ -73,8 +100,8 @@ public class Implication
             }   
         }
     	
-    	returnArray[0] = _G;
-    	returnArray[1] = _Gt;
+    	returnArray.set(0,_G);
+    	returnArray.set(1,_Gt);
     	
     	return returnArray;
     	
@@ -108,6 +135,60 @@ public class Implication
     	 n = n +(size/2)-1;
 		
 		return n;
-	}    
-    
+	}
+   
+    public static int  pathDepthFirstSearch(Graph<String> _g,int _cardinal,int [] array,int dateFin)
+    {
+    	
+    	if(array[_cardinal] == 0)
+    	{	
+    		System.out.println(_cardinal);
+    		array[_cardinal] = ++dateFin;
+    		for(int i = 0; i< _g.getIncidency(_cardinal).size();i++) 
+    		{
+    			System.out.println("->");
+    			dateFin = pathDepthFirstSearch(_g,_g.getDestinationEdge(_cardinal, i),array,dateFin);
+    			System.out.println("stop");
+    		}
+    		array[_cardinal] = ++dateFin;
+    		System.out.println(_cardinal +" = " + array[_cardinal] + "(date de fin)");
+    	}
+    	
+    	
+    	return dateFin;
+    }
+
+    public static Graph<String>  PutArray(Graph<String> Gt,int [] array)
+    {
+    	int Bignomber;
+
+    	int o = 0;
+    	Graph<String> Gconnexe = new Graph<String>(0);
+    	
+    	for(int i = 0; i < array.length;i++)
+    	{
+    		Bignomber = 0;
+    		for(int p = 0; p < array.length; p++)
+    		{
+    			if(Bignomber < array[p])
+    			{
+    				o = p;
+    				Bignomber = array[p];
+    			}
+    		}
+    		
+    		array[o] = 0;
+    		
+    		if(Gt.getIncidency(o).size() > 0)
+    		{
+    			for(int l = 0; l < Gt.getIncidency(o).size();l++)
+    			{
+    				///Gt.getDestinationEdge(o, l)
+    			}
+    		}
+    		
+    	}
+    	
+    	return Gconnexe;
+    }
 }
