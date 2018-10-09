@@ -4,18 +4,18 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Scanner;
 
-public class Implication 
+public class SAT 
 {
 
     public static void main(String[] args)
     {
         System.out.println("--- Debut du main ---");
         Scanner saisie;
-        Graph<String> G = new Graph<String>(0);
         
+        Graph<String> G = new Graph<String>(0);
         Graph<String> Gt = new Graph<String>(0);
         
-        try //Passer dans la fonction lecture fichier
+        try
         {
         	List<Graph<String>> array = Arrays.asList(G, Gt);
             if (args.length == 0)
@@ -24,9 +24,8 @@ public class Implication
                 return;
             }
             
-            System.out.println("--- Ouverture du fichier ---");
+            System.out.println("--- Ouverture du fichier nommé : " + args[0] +" ---");
             saisie = new Scanner(args[0]);
-            System.out.println("Fichier : " + args[0]);
             File file = new File(saisie.nextLine());
             saisie.close();
             
@@ -45,10 +44,10 @@ public class Implication
             return;
         }
         
-        System.out.println("G \n" + G.toString());
-        System.out.println("Gt \n"+ Gt.toString());
-        //Mettre les variables à 0.
-        int fin = 0;
+        System.out.println("\n--- Graphe des implications de G avec les sommets correctement indexés ---\n" + G.toString());
+		System.out.println("--- Graphe des implications de Gt avec les sommets correctement indexés ---\n"+ Gt.toString());
+        
+        
         int [] array = new int [G.order()];
         
         for(int i = 0;i<array.length;i++)
@@ -57,41 +56,38 @@ public class Implication
         	array[i] = 0;
         }
         
-        //Mettre les dates de fin sur chaque sommet
-        //Fonction à faire
+        System.out.println("--- Parcours en profondeur sur le graphe G ---");
+        int fin = 0;
         for(int i = 0; i < G.order();i++)
     	{
         	if(array[i] == 0) 
         	{
         		fin = pathDepthFirstSearch(G,i,array,fin);
         	}
+        	System.out.println("Date de fin du sommet "+ i + " : " + array[i] );
     	}
         
-        
-        
-        for(int i = 0; i<array.length;i++)
-        {
-        	 System.out.println("Date de fin du sommet "+ i + " : " + array[i]);
-        }
-        
+        System.out.println("\n--- Calcul des composantes fortement connexes ---");
         List<List<Integer>> TESTarray =  PutArray(Gt,array);
         
-
         for(int i = 0; i< TESTarray.size();i++)
         {
-        	System.out.println(TESTarray.get(i));
+        	System.out.println(i+1 +" = " +TESTarray.get(i));
         }
         
-        System.out.println("Il y a  "+ TESTarray.size() + " composantes fortement connexes ");
+        System.out.println("Il y a  "+ TESTarray.size() + " composantes fortement connexes\n");
+        
+        System.out.println("--- Test si la composante contient son littéral et son opposé ---");
         boolean l = TestopposedLiteral(TESTarray,array.length);
         
         if(!l)
-        	System.out.println("Le 2sat est satisfaisable");
+        	System.out.println("\nRésultat = Le 2SAT est satisfaisable");
         else
-        	System.out.println("Le 2sat n'est pas satisfaisable");
+        	System.out.println("\nRésultat = Le 2SAT n'est pas satisfaisable");
         
     }
     
+    /*ReadFile va lire le fichier et retourné 2 graphes (Le graphe normale et la transposé du graphe)*/
     public static List<Graph<String>> readFile(Scanner file,Graph<String> _G,Graph<String> _Gt) 
     {
     	List<Graph<String>> returnArray = Arrays.asList(_G,_Gt);
@@ -120,6 +116,7 @@ public class Implication
     	
     }
     
+    /*Calcule les litteraux*/
     public static void buildArray(Graph<String> _G,Graph<String> _Gt,String [] array) 
     {
     	
@@ -140,6 +137,7 @@ public class Implication
  	   
     }
     
+    /*Transforme les litteraux en index*/
     public static int transform(int n, int size) 
 	{
     	if(n<0)
@@ -150,28 +148,24 @@ public class Implication
 		return n;
 	}
    
+    /*Parcours en profondeur (fonction récursive) et met en place les dates de fin dans le tableau array*/
     public static int  pathDepthFirstSearch(Graph<String> _g,int _cardinal,int [] array,int dateFin)
     {
-    	
     	if(array[_cardinal] == 0)
     	{	
-    		System.out.println(_cardinal);
     		array[_cardinal] = ++dateFin;
     		for(int i = 0; i< _g.getIncidency(_cardinal).size();i++) 
     		{
-    			System.out.println("->");
     			dateFin = pathDepthFirstSearch(_g,_g.getDestinationEdge(_cardinal, i),array,dateFin);
-    			System.out.println("stop");
     		}
     		array[_cardinal] = ++dateFin;
-    		System.out.println(_cardinal +" = " + array[_cardinal] + "(date de fin)");
     	}
-    	
-    	
+
     	return dateFin;
     }
-
-    public static List<List<Integer>>  PutArray(Graph<String> Gt,int [] array)
+    
+    /*Fait le parcours en profondeur sur la transposé en partant du sommet possédant  la plus grande date de fin*/
+    public static List<List<Integer>> PutArray(Graph<String> Gt,int [] array)
     {
     	int Bignomber;
     	List<List<Integer>> returnList = new ArrayList<>();
@@ -179,7 +173,7 @@ public class Implication
     	int o = 0;
     	int indexList=0;
     	
-    	while(!TestArray(array)) 
+    	while(!TestArrayEqualZero(array)) 
     	{
     		
     		returnList.add(new ArrayList<>());
@@ -195,13 +189,10 @@ public class Implication
     		}
     		array[o] = 0;
     		
-    		
     		returnList.get(indexList).add(o);
-    		System.out.println();
+    		
     		for(int i = 0; i < Gt.getIncidency(o).size();i++)
     		{
-    			System.out.println(o);
-    			System.out.println(Gt.getIncidency(o).size());
     			if(array[Gt.getDestinationEdge(o,i)] != 0) 
     			{
     				returnList.get(indexList).add(Gt.getDestinationEdge(o,i));
@@ -210,7 +201,6 @@ public class Implication
     				i=0;
     			}
     		}
-    		System.out.println("lel");
     		indexList++;
     		
     	}
@@ -218,7 +208,8 @@ public class Implication
     	return returnList;
     }
     
-    public static boolean  TestArray(int [] array)
+    /*Regarde si toutes les valeurs sont à 0 si oui alors on a fini de faire le parcours en profondeur*/
+    public static boolean  TestArrayEqualZero(int [] array)
     {
     	boolean test = true;
     	for(int i = 0; i < array.length;i++)
@@ -231,6 +222,7 @@ public class Implication
     	return test;
     }
 
+    /*Regarde si il y a des litteraux opposés dans les composantes connexes*/
     public static boolean  TestopposedLiteral(List<List<Integer>> array,int size)
     {
     	boolean test = false;
@@ -238,9 +230,9 @@ public class Implication
     	{
     		for(int p = 0; p < array.get(i).size();p++)
     		{
-    			System.out.println(array.get(i).get(p)+" doit pas trouver "+((size-1)-array.get(i).get(p)));  
+    			//System.out.println(array.get(i).get(p)+" doit pas trouver "+((size-1)-array.get(i).get(p)));  
     			test = array.get(i).contains((size-1)-array.get(i).get(p));
-    			System.out.println(array.get(i).get(p) + " | " + test);  
+    			System.out.println("Sommet " + array.get(i).get(p) + " | " + test);
     		}
     	}
     	return test;
